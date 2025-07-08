@@ -12,18 +12,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# GPU Check
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Using device:", device)
-
-# Hyperparameters
 MAX_LEN = 128
 BATCH_SIZE = 16
 EPOCHS = 8
 LR = 2e-5
 NUM_LABELS = 28
 
-# Dataset Class
 class GoEmotionsDataset(torch.utils.data.Dataset):
     def __init__(self, split="train"):
         data = load_dataset("go_emotions")['train']
@@ -76,18 +70,18 @@ def compute_metrics(preds, labels, threshold=0.5):
         "macro_f1": f1_score(labels, preds_bin, average="macro")
     }
 
-# Load Datasets and DataLoaders
+# Load Datasets
 train_dataset = GoEmotionsDataset("train")
 test_dataset = GoEmotionsDataset("test")
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE)
 
-# Initialize Model
+# Initializ
 model = RobertaMultiLabelClassifier(NUM_LABELS).to(device)
 optimizer = AdamW(model.parameters(), lr=LR)
 loss_fn = nn.BCEWithLogitsLoss()
 
-# Training Metrics Tracker
+# Training
 f1_history = {
     "epoch": [],
     "micro_f1": [],
@@ -141,7 +135,7 @@ for epoch in range(EPOCHS):
     f1_history["macro_f1"].append(metrics['macro_f1'])
     f1_history["train_loss"].append(avg_loss)
 
-    # Save checkpoint
+    # Save 
     torch.save({
         'epoch': epoch + 1,
         'model_state_dict': model.state_dict(),
