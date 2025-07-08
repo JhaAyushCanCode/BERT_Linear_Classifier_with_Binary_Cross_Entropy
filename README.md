@@ -1,126 +1,127 @@
-# GoEmotions Multi-Label Emotion Classifier with BERT
-This project trains a BERT model to detect multiple emotions in a single sentence using the GoEmotions dataset. It's built using PyTorch and HuggingFace Transformers, and works best if you're using a GPU.
+# GoEmotions Multi-Label Emotion Classifier
 
-## What this does
-It takes Reddit comments (from the GoEmotions dataset) and trains a model to predict which emotions are present.
+This project contains two different deep learning models for detecting **multiple emotions in a single sentence** using the **GoEmotions dataset**. One version uses **BERT** and the other uses **RoBERTa** for better accuracy. Both are fine-tuned for the same task but differ slightly in architecture and performance.
 
-Each sentence can have more than one emotion (multi-label).
+## What this project does
 
-Uses a pretrained BERT model and adds a final classifier layer for 28 emotion types.
+* Takes Reddit comments and predicts which emotions are present
+* Supports **multi-label classification** (a sentence can have more than one emotion)
+* Built using PyTorch and HuggingFace Transformers
+* Works best on a **GPU**
+
+## Models Included
+
+### 1. BERT Version
+
+* Uses `bert-base-uncased`
+* Has a dropout + linear layer on top of BERT
+* Trained for 4 epochs
+* Gives decent results with good training time
+
+### 2. RoBERTa Version (Improved Accuracy)
+
+* Uses `roberta-base`
+* Similar structure to BERT version but replaces BERT with RoBERTa
+* Trained for 8 epochs
+* Generally gives **better accuracy** (especially on Macro-F1)
+* Slightly slower to train
+
+## What files are included
+
+### Code Files
+
+* `bert_classifier.py` – full code for BERT-based classifier
+* `roberta_classifier.py` – full code for RoBERTa-based classifier
+
+### Output Files (After Running)
+
+Each version generates the following:
+
+* `goemotions_bert_model.pt` or `goemotions_roberta_model.pt` – final saved model
+* `checkpoint_epoch_*.pt` – checkpoints saved at every epoch
+* `f1_scores.csv` – CSV file logging F1 scores and loss per epoch
+* `f1_plot.png` – line plot of F1 score trends
 
 ## How it works
-Loads data from HuggingFace (go_emotions dataset).
 
-Preprocesses the text using the BERT tokenizer.
+* Loads the GoEmotions dataset (via HuggingFace)
+* Splits into 90 percent training and 10 percent testing
+* Tokenizes text using the appropriate tokenizer (`bert-base-uncased` or `roberta-base`)
+* Encodes the labels as a binary vector (multi-hot format)
+* Feeds input through BERT or RoBERTa
+* Uses a sigmoid layer on top to output 28 scores (one per emotion)
+* Applies a threshold (0.5) to convert scores into final binary predictions
 
-Trains BERT with a small classification head on top.
+## Training settings
 
-Evaluates after each epoch using Micro-F1 and Macro-F1 scores.
+| Setting       | BERT Version      | RoBERTa Version   |
+| ------------- | ----------------- | ----------------- |
+| Max Length    | 128 tokens        | 128 tokens        |
+| Batch Size    | 16                | 16                |
+| Epochs        | 4                 | 8                 |
+| Learning Rate | 2e-5              | 2e-5              |
+| Optimizer     | AdamW             | AdamW             |
+| Loss Function | BCEWithLogitsLoss | BCEWithLogitsLoss |
 
-Saves:
+## Evaluation metrics
 
-The trained model.
+Each model is evaluated using:
 
-A CSV log of F1 scores.
+* **Micro-F1**: Looks at overall label-wise performance
+* **Macro-F1**: Treats all emotion labels equally, even if some are rare
+* **Training Loss**: BCEWithLogitsLoss is used for multi-label problems
 
-A plot of how scores changed over time.
+### Example console output
 
-## What's included
-### Code
-main.py – this has all the code to run the training, testing, evaluation, and saving.
-
-## Output Files (after you run it)
-goemotions_bert_model.pt – final model weights
-
-checkpoint_epoch_1.pt, ..._2.pt, etc. – model checkpoints for each epoch
-
-f1_scores.csv – tracks micro and macro F1 scores plus training loss
-
-f1_plot.png – graph of F1 scores across epochs
-
-## What the model looks like
-Pretrained bert-base-uncased
-
-A dropout layer (to help generalize)
-
-A linear layer to output 28 emotion scores
-
-Outputs are run through sigmoid to get probabilities for each emotion
-
-Training setup
-Max input length: 128 tokens
-
-Batch size: 16
-
-Epochs: 4
-
-Learning rate: 2e-5
-
-Optimizer: AdamW
-
-Loss: BCEWithLogitsLoss (because we have multiple labels per input)
-
-## How it evaluates performance
-### We calculate:
-
-Micro-F1: Treats all labels across all samples equally
-
-Macro-F1: Treats all labels equally, regardless of how many times they appear
-
-These are common metrics for multi-label tasks
-
-## What you’ll see during training
-### Example console output:
-
-yaml
-Copy
-Edit
-Epoch 1/4
-Training Loss: 0.1308
-Micro-F1: 0.4873, Macro-F1: 0.1917
+```
+Epoch 1/8
+Training Loss: 0.1293
+Micro-F1: 0.5437, Macro-F1: 0.2208
 ...
-Visual output
-Once training is done, you’ll get this:
+```
 
-f1_plot.png
-A line plot showing:
+## Visualization
 
-Micro-F1 over epochs
+Both versions output a plot (`f1_plot.png`) showing how Micro-F1 and Macro-F1 scores change with each epoch.
 
-Macro-F1 over epochs
-Gives a visual idea of how the model improved (or didn’t) during training.
+## Dataset
 
-## Dataset used
-GoEmotions from Google
+* Source: [GoEmotions Dataset](https://huggingface.co/datasets/go_emotions)
+* Collected by Google
+* 58,000+ Reddit comments
+* Each comment has 1–3 emotion labels
+* There are 28 emotion categories in total
 
-58k+ Reddit comments, each labeled with 1–3 emotions from a list of 28
+## Requirements
 
-Dataset is loaded and split 90 percent for training and 10 percent for testing
+Install the needed Python packages with:
 
-## How to use this
-Requirements
-### You’ll need the following Python libraries:
-
-
+```bash
 pip install torch transformers datasets scikit-learn matplotlib tqdm pandas
-### To run the training
+```
 
-python main.py
+## How to run
 
-### After it finishes, you’ll find:
+To train the BERT version:
 
-## The trained model files
+```bash
+python bert_classifier.py
+```
 
-F1 score logs in CSV
+To train the RoBERTa version:
 
-A plot of F1 over time
+```bash
+python roberta_classifier.py
+```
 
-## Final notes
-The model trains on GPU if available.
+Both scripts will save the model weights, evaluation logs, and F1 score plots.
 
-It's a solid base model. You can build more advanced stuff on top of it.
+## Notes
 
-The dataset is already cleaned and labeled, so it’s great for experimenting.
+* Both models run better on GPU. On CPU, training will be very slow.
+* RoBERTa usually performs slightly better but takes more time to train.
+* You can experiment by increasing epochs or adjusting dropout for better results.
 
-#### License
-Feel free to use this for research, learning, or experimentation. If you use it in a paper or product, be sure to credit the GoEmotions dataset and HuggingFace.
+## License
+
+This project is for learning and research use. If you use this work in academic projects, please cite the GoEmotions dataset and HuggingFace Transformers library.
