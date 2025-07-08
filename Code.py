@@ -12,9 +12,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# GPU Check
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Using device:", device)
+
+
+
 
 # Hyperparameters
 MAX_LEN = 128
@@ -23,7 +23,6 @@ EPOCHS = 4
 LR = 2e-5
 NUM_LABELS = 28
 
-# Dataset Class
 class GoEmotionsDataset(torch.utils.data.Dataset):
     def __init__(self, split="train"):
         data = load_dataset("go_emotions")['train']
@@ -54,7 +53,6 @@ class GoEmotionsDataset(torch.utils.data.Dataset):
             "labels": labels
         }
 
-# Model Class
 class BertMultiLabelClassifier(nn.Module):
     def __init__(self, num_labels):
         super().__init__()
@@ -68,7 +66,6 @@ class BertMultiLabelClassifier(nn.Module):
         out = self.dropout(pooled)
         return self.classifier(out)
 
-# Metric Computation
 def compute_metrics(preds, labels, threshold=0.5):
     preds_bin = (preds >= threshold).astype(int)
     return {
@@ -76,13 +73,13 @@ def compute_metrics(preds, labels, threshold=0.5):
         "macro_f1": f1_score(labels, preds_bin, average="macro")
     }
 
-# Load Datasets and DataLoaders
+# Load Datasets 
 train_dataset = GoEmotionsDataset("train")
 test_dataset = GoEmotionsDataset("test")
 train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE)
 
-# Initialize Model
+# Initialize 
 model = BertMultiLabelClassifier(NUM_LABELS).to(device)
 optimizer = AdamW(model.parameters(), lr=LR)
 loss_fn = nn.BCEWithLogitsLoss()
@@ -95,7 +92,9 @@ f1_history = {
     "train_loss": []
 }
 
-# Training Loop
+
+
+# Training 
 for epoch in range(EPOCHS):
     model.train()
     total_loss = 0
@@ -115,7 +114,9 @@ for epoch in range(EPOCHS):
     avg_loss = total_loss / len(train_loader)
     print(f"Training Loss: {avg_loss:.4f}")
 
-    # Evaluation
+
+    
+    # Evaluate
     model.eval()
     preds_all, labels_all = [], []
     with torch.no_grad():
@@ -141,7 +142,7 @@ for epoch in range(EPOCHS):
     f1_history["macro_f1"].append(metrics['macro_f1'])
     f1_history["train_loss"].append(avg_loss)
 
-    # Save checkpoint
+    # Save checkpoint coz I'm scared :(
     torch.save({
         'epoch': epoch + 1,
         'model_state_dict': model.state_dict(),
@@ -149,11 +150,14 @@ for epoch in range(EPOCHS):
         'f1_history': f1_history
     }, f"checkpoint_epoch_{epoch+1}.pt")
 
-# Save final model
+# Save final model coz I'm scared always :((
 torch.save(model.state_dict(), "goemotions_bert_model.pt")
 print("Model saved to goemotions_bert_model.pt")
 
-# Save and Plot F1
+
+
+
+# Plot F1 :)
 df = pd.DataFrame(f1_history)
 df.to_csv("f1_scores.csv", index=False)
 print("F1 scores saved to f1_scores.csv")
